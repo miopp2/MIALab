@@ -1,16 +1,24 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import os
+import glob
 
 
 def main():
-    # todo: load the "results.csv" file from the mia-results directory
-    # todo: read the data into a list
-    # todo: plot the Dice coefficients per label (i.e. white matter, gray matter, hippocampus, amygdala, thalamus)
-    #  in a boxplot
+    # plot the Dice coefficients per label (i.e. white matter, gray matter, hippocampus, amygdala, thalamus)
+    # in a boxplot
 
-    # alternative: instead of manually loading/reading the csv file you could also use the pandas package
-    # but you will need to install it first ('pip install pandas') and import it to this file ('import pandas as pd')
-    pass  # pass is just a placeholder if there is no other code
+    cdir = os.getcwd()
+    tdir = glob.glob(f'{cdir}/mia-result/*')[0]
+    data = pd.read_csv(f'{tdir}/results.csv', delimiter=';')
+    results = pd.DataFrame(data)
+    results.boxplot(column='DICE', by='LABEL', grid=False)
+    plt.suptitle('')
+    plt.title("Comparison of DICE for the different labels")
+    plt.xlabel('')
+    plt.ylabel('DICE coefficient')
+    plt.savefig(f'{tdir}/DICE_boxplot.png')
 
 
 if __name__ == '__main__':
