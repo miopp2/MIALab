@@ -1,3 +1,4 @@
+daal==2021.2.3
 pathos==0.2.9
 pymia==0.3.2
 matplotlib==3.5.2
