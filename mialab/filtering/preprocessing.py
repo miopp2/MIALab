@@ -136,6 +136,10 @@ class ImageRegistration(pymia_fltr.Filter):
         transform = params.transformation
         is_ground_truth = params.is_ground_truth  # the ground truth will be handled slightly different
 
+        # different interpolator gT is int (you don't want linear interpolation since that would lead to floats
+        # and image has continuuous values -> interpolate linearly. Could also use spline or something more fancy
+        # for interpolation
+
         if is_ground_truth:
             interpolator = sitk.sitkNearestNeighbor
         else:
