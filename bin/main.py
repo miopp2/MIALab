@@ -72,7 +72,6 @@ def main(result_dir: str, data_atlas_dir: str, data_train_dir: str, data_test_di
     data_train = np.concatenate([img.feature_matrix[0] for img in images])
     labels_train = np.concatenate([img.feature_matrix[1] for img in images]).squeeze()
 
-    warnings.warn('Random forest parameters not properly set.')
     forest = sk_ensemble.RandomForestClassifier(max_features=images[0].feature_matrix[0].shape[1],
                                                 n_estimators=10,
                                                 max_depth=10)
@@ -80,6 +79,14 @@ def main(result_dir: str, data_atlas_dir: str, data_train_dir: str, data_test_di
     start_time = timeit.default_timer()
     forest.fit(data_train, labels_train)
     print(' Time elapsed:', timeit.default_timer() - start_time, 's')
+
+    # print the feature importance for the training
+    featureLabels = ["AtlasCoordsX", "AtlasCoordsY", "AtlasCoordsZ", "T1wIntensities", "T2wIntensities", "T1WGradient", "T2wGradient"]
+    featureImportancesOrdered = (-forest.feature_importances_).argsort()
+    featureLabelsOrdered = [featureLabels[arg] for arg in featureImportancesOrdered]
+    featureImportancePrint = ["{}: {:.4f}".format(label, value) for label, value in zip(featureLabelsOrdered, forest.feature_importances_[featureImportancesOrdered])]
+    print("Feature importance in descending order:\n", featureImportancePrint)
+
 
     # create a result directory with timestamp
     t = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
@@ -123,18 +130,18 @@ def main(result_dir: str, data_atlas_dir: str, data_train_dir: str, data_test_di
         images_prediction.append(image_prediction)
         images_probabilities.append(image_probabilities)
 
-    # post-process segmentation and evaluate with post-processing
-    post_process_params = {'simple_post': True}
-    images_post_processed = putil.post_process_batch(images_test, images_prediction, images_probabilities,
-                                                     post_process_params, multi_process=True)
-
-    for i, img in enumerate(images_test):
-        evaluator.evaluate(images_post_processed[i], img.images[structure.BrainImageTypes.GroundTruth],
-                           img.id_ + '-PP')
-
-        # save results
-        sitk.WriteImage(images_prediction[i], os.path.join(result_dir, images_test[i].id_ + '_SEG.mha'), True)
-        sitk.WriteImage(images_post_processed[i], os.path.join(result_dir, images_test[i].id_ + '_SEG-PP.mha'), True)
+    # # post-process segmentation and evaluate with post-processing
+    # post_process_params = {'simple_post': True}
+    # images_post_processed = putil.post_process_batch(images_test, images_prediction, images_probabilities,
+    #                                                  post_process_params, multi_process=True)
+    #
+    # for i, img in enumerate(images_test):
+    #     evaluator.evaluate(images_post_processed[i], img.images[structure.BrainImageTypes.GroundTruth],
+    #                        img.id_ + '-PP')
+    #
+    #     # save results
+    #     sitk.WriteImage(images_prediction[i], os.path.join(result_dir, images_test[i].id_ + '_SEG.mha'), True)
+    #     sitk.WriteImage(images_post_processed[i], os.path.join(result_dir, images_test[i].id_ + '_SEG-PP.mha'), True)
 
     # use two writers to report the results
     os.makedirs(result_dir, exist_ok=True)  # generate result directory, if it does not exists
